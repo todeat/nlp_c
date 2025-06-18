@@ -1,0 +1,7 @@
+Inteligența artificială reprezintă una dintre cele mai importante revoluții tehnologice ale secolului XXI. Această tehnologie transformă radical modul în care interacționăm cu computerele și cum acestea ne ajută în viața de zi cu zi. Machine learning și deep learning sunt subdomeniile care permit sistemelor să învețe și să se adapteze fără a fi programate explicit pentru fiecare sarcină. 
+
+Companiile din întreaga lume investesc miliarde de dolari în cercetarea și dezvoltarea de soluții bazate pe AI. De la asistentii virtuali până la vehiculele autonome, aplicațiile sunt infinite. Rețelele neurale artificiale imită modul în care funcționează creierul uman, procesând informații prin straturi multiple de noduri interconectate.
+
+În domeniul medical, AI ajută la diagnosticarea precoce a bolilor și la dezvoltarea de tratamente personalizate. În educație, platformele inteligente oferă experiențe de învățare adaptate nevoilor fiecărui student. Industriile de producție folosesc roboți inteligenți pentru a automatiza procesele și a crește eficiența.
+
+Cu toate acestea, dezvoltarea AI ridică și întrebări etice importante despre viitorul muncii, confidențialitatea datelor și impactul asupra societății. Este crucial să găsim un echilibru între progresul tehnologic și responsabilitatea socială.
