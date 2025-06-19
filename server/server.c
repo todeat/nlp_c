@@ -35,13 +35,6 @@ typedef struct {
     pthread_cond_t not_full;
 } RequestQueue;
 
-// Informații despre clienți
-// typedef struct {
-//     int fd;
-//     char address[50];
-//     time_t connect_time;
-//     int request_count;
-// } ClientInfo;
 
 // Variabile globale
 RequestQueue request_queue;
@@ -49,7 +42,7 @@ ClientInfo clients[MAX_CLIENTS];
 pthread_mutex_t clients_mutex = PTHREAD_MUTEX_INITIALIZER;
 int client_count = 0;
 
-// Inițializare coadă
+
 void init_queue() {
     request_queue.front = 0;
     request_queue.rear = -1;
@@ -59,7 +52,7 @@ void init_queue() {
     pthread_cond_init(&request_queue.not_full, NULL);
 }
 
-// Adăugare cerere în coadă
+// Adaugare cerere in coada
 int enqueue(ProcessingRequest request) {
     pthread_mutex_lock(&request_queue.mutex);
     
@@ -76,7 +69,7 @@ int enqueue(ProcessingRequest request) {
     return 0;
 }
 
-// Extragere cerere din coadă
+// Extragere cerere din coada
 ProcessingRequest dequeue() {
     pthread_mutex_lock(&request_queue.mutex);
     
@@ -94,15 +87,13 @@ ProcessingRequest dequeue() {
 }
 
 void* processing_thread(void* arg) {
-    // Inițializăm clasificatorul Bayes și colecția de documente
+    // Init clasificatorul Bayes si colectia de documente
     static BayesClassifier* classifier = NULL;
     static DocumentCollection* collection = NULL;
     
     if (!classifier) {
         classifier = init_bayes_classifier();
         
-        // Antrenăm clasificatorul cu câteva exemple (în practică, ar trebui 
-        // să faceți asta cu un set de date mai mare)
         train_bayes_classifier(classifier, 
             "Meciul de fotbal s-a terminat cu scorul de 2-1. Jucătorii au fost foarte buni.",
             "Sport");
@@ -147,7 +138,7 @@ void* processing_thread(void* arg) {
         response.topic = NULL;
         response.summary = NULL;
         
-        // Adăugăm documentul în colecție
+
         collection->documents = realloc(collection->documents, 
                                        (collection->document_count + 1) * sizeof(char*));
         if (collection->documents) {
@@ -162,16 +153,15 @@ void* processing_thread(void* arg) {
                 
                 case REQUEST_DETERMINE_TOPIC:
                 {
-                    // Folosim în primul rând clasificatorul Bayes
+                    
                     response.topic = classify_text_bayes(classifier, request.text);
                     
-                    // Dacă rezultatul este "Necunoscut", încercăm metoda cu cuvinte cheie
+                    
                     if (strcmp(response.topic, "Necunoscut") == 0) {
-                        free(response.topic);  // Eliberăm memoria alocată anterior
+                        free(response.topic); 
                         response.topic = determine_topic(request.text);
                     }
                     
-                    // Antrenăm clasificatorul cu noul document dacă avem un rezultat valid
                     if (strcmp(response.topic, "Necunoscut") != 0 && 
                         strcmp(response.topic, "Eroare la procesare") != 0) {
                         train_bayes_classifier(classifier, request.text, response.topic);
@@ -180,7 +170,7 @@ void* processing_thread(void* arg) {
                 }                
                 
             case REQUEST_GENERATE_SUMMARY:
-                // Folosim metoda îmbunătățită de generare a rezumatelor
+                
                 response.summary = generate_summary(request.text, 3, collection);
                 break;
 
@@ -190,7 +180,6 @@ void* processing_thread(void* arg) {
                 strcpy(response.error_message, "Tip de cerere necunoscut");
         }
         
-        // Calculăm numărul de cuvinte pentru toate tipurile de cereri
         if (response.status == STATUS_OK && request.type != REQUEST_COUNT_WORDS) {
             response.word_count = count_words(request.text);
         }
@@ -198,11 +187,9 @@ void* processing_thread(void* arg) {
         time_t end_time = time(NULL);
         response.processing_time = difftime(end_time, start_time);
         
-        // Trimitere răspuns
         send_response(request.client_fd, &response);
         
         
-        // Eliberare memorie
         free(request.text);
         if (response.topic) free(response.topic);
         if (response.summary) free(response.summary);
@@ -217,7 +204,7 @@ void remove_client(int client_fd) {
     
     for (int i = 0; i < client_count; i++) {
         if (clients[i].fd == client_fd) {
-            // Mută ultimul client pe poziția curentă
+            // Muta ultimul client pe poz curr
             if (i < client_count - 1) {
                 clients[i] = clients[client_count - 1];
             }
@@ -233,7 +220,7 @@ void* client_handler(void* arg) {
     int client_fd = *((int*)arg);
     free(arg);
     
-    // Bucla pentru gestionarea mai multor cereri de la același client
+    // Bucla pentru gestionarea mai multor cereri de la acc client
     while (1) {
         // Primire cerere
         Request req;
@@ -250,10 +237,10 @@ void* client_handler(void* arg) {
         proc_req.type = req.type;
         proc_req.text = strdup(req.text);
         
-        // Adăugare în coada de procesare
+        // Add in coada de procesare
         enqueue(proc_req);
         
-        // Actualizare informații client
+        // Actualizare info client
         pthread_mutex_lock(&clients_mutex);
         for (int i = 0; i < client_count; i++) {
             if (clients[i].fd == client_fd) {
@@ -267,7 +254,7 @@ void* client_handler(void* arg) {
     return NULL;
 }
 
-// Administrare client - funcția corectată
+// Administrare client 
 void handle_admin_client(int admin_fd) {
     AdminRequest admin_req;
     if (receive_admin_request(admin_fd, &admin_req) < 0) {
@@ -276,18 +263,18 @@ void handle_admin_client(int admin_fd) {
     }
     
     AdminResponse admin_resp;
-    memset(&admin_resp, 0, sizeof(AdminResponse)); // Inițializare completă
+    memset(&admin_resp, 0, sizeof(AdminResponse)); // Init completa
     admin_resp.status = STATUS_OK; // Setare status implicit OK
     
     switch (admin_req.command) {
         case ADMIN_GET_CLIENTS:
             pthread_mutex_lock(&clients_mutex);
             admin_resp.client_count = client_count;
-            // Copiază informațiile despre clienți
+            // Copiaza info despre clienti
             for (int i = 0; i < client_count && i < MAX_CLIENTS; i++) {
                 admin_resp.clients[i] = clients[i];
             }
-            // Setează și informațiile despre coadă pentru compatibilitate
+            
             pthread_mutex_lock(&request_queue.mutex);
             admin_resp.queue_size = request_queue.count;
             admin_resp.queue_capacity = MAX_QUEUE_SIZE;
@@ -296,7 +283,7 @@ void handle_admin_client(int admin_fd) {
             break;
             
         case ADMIN_GET_QUEUE_STATUS:
-            admin_resp.client_count = 0; // Indică că e răspuns pentru queue status
+            admin_resp.client_count = 0; 
             pthread_mutex_lock(&request_queue.mutex);
             admin_resp.queue_size = request_queue.count;
             admin_resp.queue_capacity = MAX_QUEUE_SIZE;
@@ -321,10 +308,10 @@ int main() {
     struct sockaddr_in tcp_addr;
     struct sockaddr_un unix_addr;
     
-    // Inițializare coadă și alte structuri de date
+    
     init_queue();
     
-    // Creare socket TCP pentru clienți normali
+    
     tcp_fd = socket(AF_INET, SOCK_STREAM, 0);
     if (tcp_fd < 0) {
         perror("Eroare la crearea socket-ului TCP");
@@ -345,14 +332,13 @@ int main() {
     
     listen(tcp_fd, 5);
     
-    // Creare socket UNIX pentru clientul de administrare
     unix_fd = socket(AF_UNIX, SOCK_STREAM, 0);
     if (unix_fd < 0) {
         perror("Eroare la crearea socket-ului UNIX");
         exit(1);
     }
     
-    unlink(UNIX_SOCKET_PATH); // Eliminare socket vechi dacă există
+    unlink(UNIX_SOCKET_PATH); 
     
     unix_addr.sun_family = AF_UNIX;
     strcpy(unix_addr.sun_path, UNIX_SOCKET_PATH);
@@ -364,11 +350,12 @@ int main() {
     
     listen(unix_fd, 5);
     
-    // Creare thread-uri pentru procesare
+
+
+
     pthread_t processing_tid;
     pthread_create(&processing_tid, NULL, processing_thread, NULL);
     
-    // Folosim poll pentru a gestiona mai multe conexiuni
     struct pollfd fds[2];
     fds[0].fd = tcp_fd;
     fds[0].events = POLLIN;
@@ -385,7 +372,6 @@ int main() {
             break;
         }
         
-        // Verificare conexiuni de la clienți normali
         if (fds[0].revents & POLLIN) {
             struct sockaddr_in client_addr;
             socklen_t client_len = sizeof(client_addr);
@@ -399,7 +385,6 @@ int main() {
                 continue;
             }
             
-            // Adăugare client în lista de clienți
             pthread_mutex_lock(&clients_mutex);
             if (client_count < MAX_CLIENTS) {
                 clients[client_count].fd = *client_fd;
@@ -410,13 +395,11 @@ int main() {
             }
             pthread_mutex_unlock(&clients_mutex);
             
-            // Creare thread pentru client
             pthread_t client_tid;
             pthread_create(&client_tid, NULL, client_handler, client_fd);
             pthread_detach(client_tid);
         }
         
-        // Verificare conexiuni de la clientul de administrare
         if (fds[1].revents & POLLIN) {
             struct sockaddr_un admin_addr;
             socklen_t admin_len = sizeof(admin_addr);
@@ -428,7 +411,7 @@ int main() {
                 continue;
             }
             
-            // Gestionare client de administrare
+
             handle_admin_client(admin_fd);
         }
     }
