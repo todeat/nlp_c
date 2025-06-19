@@ -1,8 +1,4 @@
 #!/usr/bin/env python3
-"""
-Client Python pentru serverul NLP
-Implementează punctul 4 obligatoriu - client pe alt limbaj/platformă
-"""
 
 import socket
 import struct
@@ -167,7 +163,7 @@ class NLPClient:
 def print_help():
     """Afișează mesajul de ajutor"""
     print("=" * 60)
-    print("🐍 CLIENT PYTHON PENTRU SERVERUL NLP")
+    print("CLIENT PYTHON PENTRU SERVERUL NLP")
     print("=" * 60)
     print("Utilizare: python3 nlp_client.py COMANDA FIȘIER")
     print("\nComenzi disponibile:")
